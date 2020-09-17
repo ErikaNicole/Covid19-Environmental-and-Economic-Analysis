@@ -22,7 +22,7 @@ sns.set_style('whitegrid')
 March_Data = pd.read_excel(r'data/HomeOfficeGeneration.xlsx', sheet_name = 'March')
 April_Data = pd.read_excel(r'data/HomeOfficeGeneration.xlsx', sheet_name = 'April')
 May_Data = pd.read_excel(r'data/HomeOfficeGeneration.xlsx', sheet_name = 'May')
-# June_Data = pd.read_excel(r'data/HomeOfficeGeneration.xlsx', sheet_name = 'June')
+#June_Data = pd.read_excel(r'data/HomeOfficeGeneration.xlsx', sheet_name = 'June')
 
 # Question: in 'normal times' what is the average energy produced per day across a month?
 # Using 2019 data this point can be proved
@@ -93,12 +93,13 @@ def plot_generation_of_any_chosen_day_march(day_chosen, year_chosen):
     :param day_chosen: this is an integer 1..31
     :return:
     """
-
-    x = March_Data[1:2].values[0][5:].tolist()
-    x_dt = [datetime.datetime.combine(Date[day_chosen], t) for t in x]
-    x = md.DateFormatter('%H:%M:%S')
+                                                                            # Date in a List
+    x = March_Data[1:2].values[0][5:].tolist()                              # Hours in a List
+    x_dt = [datetime.datetime.combine(Date[day_chosen], t) for t in x]      # Function to combine Date and Hour
+    x = md.DateFormatter('%H:%M:%S')                                        # Necessary to Plot datetime.datetime format
     ax = plt.gca()
     ax.xaxis.set_major_formatter(x)
+
     if year_chosen == 2019:
         plt.plot(x_dt, HQ_Electr_March_2019[day_chosen,5:])
     elif year_chosen == 2020:
@@ -203,3 +204,79 @@ def comparison_plot_with_emissions_of_any_chosen_date_march(day_chosen, year_cho
     plt.show()
 
     return
+
+# - - - - - - - Looking at single person consumption in the office
+
+# In relative terms due to government law we have that the minimum office space is
+# Under The Workplace (Health, Safety and Welfare) Regulations 1992, employers have a responsibility to provide a minimum work space of 40 square feet per person in an office area.
+
+# However a more realistic average for London Seems to be around 100 sq ft - hence why such figure is used in making the subsequent calculations.
+
+capacity_40sqft = 800000/40
+capacity_100sqft = 800000/100
+
+fig, ax1 = plt.subplots()
+ax1.set(title = "Energy Generated from one individual (taking up 40 sq ft) in an office (800,000 sq ft) in a Sample Day Before Covid")
+
+color = 'tab:red'
+ax1.set_xlabel('month-day hour')
+ax1.set_ylabel('kWh of Energy Generated', color=color)
+ax1.plot(x_dt, HQ_Electr_March_2019[0,5:]/capacity_40sqft, color=color)
+ax1.tick_params(axis='y', labelcolor=color)
+
+ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+
+color = 'tab:blue'
+ax2.set_ylabel('kgCO2 Emissions from Energy Generated', color = color)  # we already handled the x-label with ax1
+ax2.plot(x_dt, (0.547*HQ_Electr_March_2019[0,5:])/capacity_40sqft, color = color)
+# ax2.fill_between(x = x_dt, y1 = 0.547*HQ_Electr_March_2019[0,5:], color = color, alpha = 0.30)
+ax2.tick_params(axis='y', labelcolor=color)
+
+fig.tight_layout()  # otherwise the right y-label is slightly clipped
+plt.show()
+
+# - - - - - - - - - -
+
+fig, ax1 = plt.subplots()
+ax1.set(title = "Energy Generated from one individual (taking up 100 sq ft) in an office (800,000 sq ft) in a Sample Day Before Covid")
+
+color = 'tab:red'
+ax1.set_xlabel('month-day hour')
+ax1.set_ylabel('kWh of Energy Generated', color=color)
+ax1.plot(x_dt, HQ_Electr_March_2019[0,5:]/capacity_100sqft, color=color)
+ax1.tick_params(axis='y', labelcolor=color)
+
+ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+
+color = 'tab:blue'
+ax2.set_ylabel('kgCO2 Emissions from Energy Generated', color = color)  # we already handled the x-label with ax1
+ax2.plot(x_dt, (0.547*HQ_Electr_March_2019[0,5:])/capacity_100sqft, color = color)
+# ax2.fill_between(x = x_dt, y1 = 0.547*HQ_Electr_March_2019[0,5:], color = color, alpha = 0.30)
+ax2.tick_params(axis='y', labelcolor=color)
+
+fig.tight_layout()  # otherwise the right y-label is slightly clipped
+plt.show()
+
+# - - - - - - - - - - - - - -
+# - - - using May Data
+
+# Clean up May 2019 Data
+
+May_19_Data = May_Data[62:]
+Time = March_Data[1:2].to_numpy()[0][5:]
+labels = March_Data[1:2].values.tolist()
+May_19_Data.columns = labels
+
+# Visualising May 2019 Data
+
+HQ_Electr_May_2019 = May_19_Data[31:].to_numpy()
+Date_May = HQ_Electr_May_2019[:,4]
+
+x = March_Data[1:2].values[0][5:].tolist()
+# For the first day of May Date[0]
+x_dt = [datetime.datetime.combine(Date_May[0], t) for t in x]
+
+x = md.DateFormatter('%H:%M:%S')
+ax = plt.gca()
+ax.xaxis.set_major_formatter(x)
+plt.plot(x_dt, HQ_Electr_May_2019[0,5:])
