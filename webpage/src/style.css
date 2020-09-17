@@ -9,13 +9,26 @@ body{
 }
 
 h1, h2, h3 {
-    font-family: 'PT Sans', sans-serif;
+    font-family: 'Noto Sans JP', sans-serif;
     font-weight: 700;
 }
 
 header{
     padding: 10px 15px;
     overflow: hidden;
+}
+
+section.intro{
+    padding: 10px 10px 20px 10px;
+}
+
+section.titles{
+    overflow: hidden;
+}
+
+section.titles h1{
+    font-size: 64px;
+    font-weight: 600;
 }
 
 section.analysis {
@@ -36,5 +49,5 @@ div img {
 }
 
 div:hover img {
-  transform: scale(1.2) rotate(1deg);
+  transform: scale(1.2);
 }
