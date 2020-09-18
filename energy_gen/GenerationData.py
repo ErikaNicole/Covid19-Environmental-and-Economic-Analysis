@@ -280,3 +280,123 @@ x = md.DateFormatter('%H:%M:%S')
 ax = plt.gca()
 ax.xaxis.set_major_formatter(x)
 plt.plot(x_dt, HQ_Electr_May_2019[0,5:])
+
+# - - - -
+
+# https://www.wsp.com/en-GB/insights/office-vs-home-working-how-we-can-save-our-carbon-footprint
+
+# https://www.ofgem.gov.uk/gas/retail-market/monitoring-data-and-statistics/typical-domestic-consumption-values
+# TDCVs Typical Domestic Consumption Values
+#
+# https://uk.finance.yahoo.com/news/working-from-home-could-cost-uk-employees-52-m-more-a-week-on-energy-bills-000140655.html
+# Expected % increase:
+# People working from home will use 25% more electricity and 17% more gas per day than households where people are out at work all day, according to the research by comparison and switching service Uswitch.com.
+# Can our analysis reflect that?
+
+# Typical/Average Pre-Covid consumption of Energy in hours
+# https://www.ukpower.co.uk/home_energy/average-household-gas-and-electricity-usage
+# For an Electricity Profile Class 1 of an average household.
+consumption_rate_low = 1,800        #kWh per day
+consumption_rate_medium = 2,900     #kWh per day
+consumption_rate_high = 4,300       #kWh per day
+
+# Typical/Average Pre-Covid consumption of Energy per m2
+# https://www.ukpower.co.uk/home_energy/average-energy-bill
+# An average flat size is approx 80 m2
+consumption_of_energy_m2 = 25       #kWh per m2
+# m2 in sq ft: 1 m2 is 10.7639 sq ft
+consumption_of_energy_sqft = consumption_of_energy_m2*10.7639           # kWh per sq ft
+# flat size in ft
+
+# https://www.cse.org.uk/advice/advice-and-support/how-much-electricity-am-i-using
+# Energy by appliance - Dataset Household Appliances Average Power Ratings;
+# Can we estimate what appliances - work related will be used more and calculate in terms of hours?
+appliances_consumption = pd.read_excel(r'data/Household Appliances Average Power Ratings.xlsx')
+
+# Assumption in terms of appliances used more -
+
+# Smart phone charge
+# Tablet charge
+# Broadband router
+# Laptop
+# Desktop Computer
+# Microwave
+# Toaster
+# Kettle
+
+# Include conversion to kWh and make it weekly ie 9 h per day * 5-day working week
+
+phone_charge_weekly_avg_power_rating_kWh = appliances_consumption[appliances_consumption['Appliance '] == 'Smart phone (charge)']['Average power rating (Watts)'].values[0]*0.0001*9*5
+tablet_charge_weekly_avg_power_rating_kWh = appliances_consumption[appliances_consumption['Appliance '] == 'Tablet (charge)']['Average power rating (Watts)'].values[0]*0.0001*9*5
+broadband_router_weekly_avg_power_rating_kWh = appliances_consumption[appliances_consumption['Appliance '] == 'Broadband router']['Average power rating (Watts)'].values[0]*0.0001*9*5
+laptop_weekly_avg_power_rating_kWh = appliances_consumption[appliances_consumption['Appliance '] == 'Laptop']['Average power rating (Watts)'].values[0]*0.0001*9*5
+desktop_computer_weekly_avg_power_rating_kWh = appliances_consumption[appliances_consumption['Appliance '] == 'Desktop computer']['Average power rating (Watts)'].values[0]*0.0001*9*5
+microwave_weekly_avg_power_rating_kWh = appliances_consumption[appliances_consumption['Appliance '] == 'Microwave']['Average power rating (Watts)'].values[0]*0.0001*0.25*5
+kettle_weekly_avg_power_rating_kWh = appliances_consumption[appliances_consumption['Appliance '] == 'Kettle']['Average power rating (Watts)'].values[0]*0.0001*0.25*5
+
+# Note kettle and microwave only assumed to be used for max of 15 minutes during each working day.
+
+# Now include heating up the home with electrical heating
+# https://www.greenmatch.co.uk/green-energy/central-heating-capacity
+# https://www.vivintsolar.com/blog/how-much-electricity-does-a-space-heater-use
+# Space Heater stats on average
+# 1,500 W x 9 hours
+
+heating_weekly_avg_power_rating_kWh = 1.5*9*5
+
+# Combining Data;
+
+weekly_avg_power_rating_increase = np.array((phone_charge_weekly_avg_power_rating_kWh, tablet_charge_weekly_avg_power_rating_kWh,
+                                    broadband_router_weekly_avg_power_rating_kWh, laptop_weekly_avg_power_rating_kWh,
+                                    desktop_computer_weekly_avg_power_rating_kWh, microwave_weekly_avg_power_rating_kWh,
+                                    kettle_weekly_avg_power_rating_kWh, heating_weekly_avg_power_rating_kWh))
+
+plt.bar(x = ['Phone', 'Tablet', 'Broadband', 'Laptop', 'Desktop', 'Microwave', 'Kettle'], height = weekly_avg_power_rating_increase[0:7])
+
+# Stacked Bar
+
+Label = ['Phone', 'Tablet', 'Broadband', 'Laptop', 'Desktop', 'Microwave', 'Kettle', 'Heating']
+plt.bar(x = "Appliances Consumption", height = weekly_avg_power_rating_increase[0], width = 0.75)
+bottom_bar = weekly_avg_power_rating_increase[0]
+for i in range(1, 7):
+    plt.bar(x = "Appliances Consumption", height = weekly_avg_power_rating_increase[i], bottom = bottom_bar, width = 0.75)
+    bottom_bar = bottom_bar + weekly_avg_power_rating_increase[i]
+plt.bar(x = "Heating Consumption", height = weekly_avg_power_rating_increase[7])
+
+plt.legend(labels = (Label[0], Label[1], Label[2], Label[3], Label[4], Label[5], Label[6], Label[7]), fancybox = True)
+
+plt.title("Appliances Consumption in kWh over a working week (9 hours and 5 days)")
+#plt.xticks(0, Label, fontweight='bold')
+
+## -- subplots instead
+
+# Assumption: a workday is 9 hour long, a 5 working week and there are 48 working weeks per year.
+# For which it is necessary to have a desktop, and other small power equipment.
+
+fig, ax = plt.subplots(ncols = 3, figsize = (14, 10))
+Label = ['Phone', 'Tablet', 'Broadband', 'Laptop', 'Desktop', 'Microwave', 'Kettle', 'Heating']
+ax[0].bar(x = "Appliances Consumption", height = weekly_avg_power_rating_increase[0], width = 0.75)
+bottom_bar = weekly_avg_power_rating_increase[0]
+for i in range(1, 7):
+    ax[0].bar(x = "Appliances Consumption", height = weekly_avg_power_rating_increase[i], bottom = bottom_bar, width = 0.75)
+    bottom_bar = bottom_bar + weekly_avg_power_rating_increase[i]
+    ax[0].legend(labels = (Label[0], Label[1], Label[2], Label[3], Label[4], Label[5], Label[6]), fancybox = True)
+
+ax[1].bar(x = "Heating Consumption", height = weekly_avg_power_rating_increase[7])
+
+ax[0].set(title = "Appliances Consumption in kWh over a working week", ylabel = "Energy in kWh")
+ax[1].set(title = "Heating Consumption in kWh over a working week", ylabel = "Energy in kWh")
+
+ax[2].set(title = "Total Consumption in kWh over a working week", ylabel = "Energy in kWh")
+ax[2].bar(x = "Appliances Consumption", height = weekly_avg_power_rating_increase[0], width = 0.75)
+bottom_bar = weekly_avg_power_rating_increase[0]
+for i in range(1, 8):
+    ax[2].bar(x = "Appliances Consumption", height = weekly_avg_power_rating_increase[i], bottom = bottom_bar, width = 0.75)
+    bottom_bar = bottom_bar + weekly_avg_power_rating_increase[i]
+    ax[2].legend(labels = (Label[0], Label[1], Label[2], Label[3], Label[4], Label[5], Label[6], Label[7]), fancybox = True)
+
+# What are new consumption_rate low medium and high for a working from home household?
+
+
+
+
